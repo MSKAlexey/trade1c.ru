@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import base64
 import hashlib
 import json
 import pathlib
 import shutil
 import subprocess
 import urllib.request
-import uuid
 
 ROOT = pathlib.Path.cwd()
 BASE_CFE = ROOT / "base.cfe"
@@ -36,5 +34,126 @@ EXTENSION_COMMENT = (
 )
 EXTENSION_PREFIX = "АЭР_"
 NEW_FILE_UUID = "f5d3d06c-49a2-4a75-ae1c-9fb23800c5e2"
+BSL_PATH = ROOT / ".github" / "scripts" / "АЭР_УПД_ЭТМ_Module.bsl"
 
-BSL_B64 = "JtCf0L7RgdC70LUoItCX0LDQv9C+0LvQvdC40YLRjNCU0LDQvdC90YvQtdCj0J/QlF81XzAyX9CY0L3RhNC+0YDQvNCw0YbQuNGP0J/RgNC+0LTQsNCy0YbQsCIpCtCf0YDQvtGG0LXQtNGD0YDQsCDQkNCt0KDf0JfQsNC/0L7Qu9C90LjRgtGM0JTQsNC90L3Ri9C10KPQn9CUXzVfMDJf0JjQvdGE0L7RgNC80LDRhtC40Y/Qn9GA0L7QtNCw0LLRhtCw0J/QvtGB0LvQtShQl9C90LDRhyDQntGB0L3QvtCy0LDQvdC40LUsINCX0L3QsNGHINCd0LDRgdGC0YDQvtC50LrQuCwg0JTQsNC90L3Ri9C1LCDQntC/0LjRgdCw0L3QuNC1LCDQntGC0LrQsNC3KQoJCglF0YHQu9C4INCd0LUg0J7RgtC60LDQtyDQotC+0LPQtNCwCgkJ0JDQrdCgX9CU0L7QsdCw0LLQuNGC0YzQlNCw0L3QvdGL0LXRg9Cf0JTQrdCi0Jwo0J7RgdC90L7QstCw0L3QuNC1LCDQlNCw0L3QvdGL0LUpOwoJ0JrQvtC90LXRhtCV0YHQu9C4OwoJCgrQmtC+0L3QtdGG0J/RgNC+0YbQtdC00YPRgNGLCgom0J/QvtGB0LvQtSgi0JfQsNC/0L7Qu9C90LjRgtGM0JTQsNC90L3Ri9C10KPQn9CUXzVfMDNf0JjQvdGE0L7RgNC80LDRhtC40Y/Qn9GA0L7QtNCw0LLRhtCwIikK0J/RgNC+0YbQtdC00YPRgNCwINCQ0K3QoF/Ql9Cw0L/QvtC70L3QuNGC0YzQlNCw0L3QvdGL0LXRg9Cf0JTQrdCi0Jwo0J7RgdC90L7QstCw0L3QuNC1LCDQlNCw0L3QvdGL0LUpOwoJCglF0YHQu9C4INCd0LUg0J7RgtC60LDQtyDQotC+0LPQtNCwCgkJ0JDQrdCgX9CU0L7QsdCw0LLQuNGC0YzQlNCw0L3QvdGL0LXRg9Cf0JTQrdCi0Jwo0J7RgdC90L7QstCw0L3QuNC1LCDQlNCw0L3QvdGL0LUpOwoJ0JrQvtC90LXRhtCV0YHQu9C4OwoJCgrQmtC+0L3QtdGG0J/RgNC+0YbQtdC00YPRgNGLCgrQn9GA0L7RhtC10LTRg9GA0LAg0JDQrdCgX9CU0L7QsdCw0LLQuNGC0YzQlNCw0L3QvdGL0LXRg9Cf0JTQrdCi0Jwo0J7RgdC90L7QstCw0L3QuNC1LCDQlNCw0L3QvdGL0LUpCgkKCdCV0YHQu9C4INCf0YDQuNC30L3QsNGH0LXQvdC40LUgPSDQndC10L7Qv9GA0LXQtNC10LvQtdC90L4g0KLQvtCz0LTQsAoJCssB0L7Qt9Cy0YDQsNGCOwoJ0JrQvtC90LXRhtCV0YHQu9C4OwoJCglf0LXRgNCw0LvQuNC30LDRhtC40Y8gPSDQlNCw0L3QvdGL0LUu0KHQuNGB0YLQtdC80LDRgtC40LfQuNGA0L7QstCw0L3QvdGL0LnQstGB0LvRg9CzOwoJ0JXRgdC70Lgg0J3QtSDQl9C90LDRh9C10L3QuNC10JfQsNC/0L7Qu9C90LXQvdC+KNCg0LXQsNC70LjQt9Cw0YbQuNGPKSDQotC+0LPQtNCwCgkJ0JLQvtC30LLRgNCw0YI7CgnQmtC+0L3QtdGG0J/RgNC+0YbQtdC00YPRgNGLCgoJ0JXRgdC70Lgg0JDQrdCgX9CY0J3QndCe0YDQvtCz0LDQvdC40LfQsNGG0LjQuCjQoNC10LDQu9C40LfQsNGG0LjRjCkgPD4gIjUwMjQxMzY2NjYiINCi0L7Qs9C00LAKCQlQstC+0LfQstGA0LDRgjvQmtC+0L3QtdGG0J/RgNC+0YbQtdC00YPRgNGLCgoJ0JfQsNC60LDQt9Ca0LvQuNC10L3RgtCwID0g0JDQrdCgX9Cf0L7Qu9GD0YfQuNGC0YzQl9Cw0LrQsNC30JrQu9C40LXQvdGC0Lgo0KDQtdCw0LvQuNC30LDRhtC40Y8pOwoJ0J3QvtC80LXRgNCX0LDQutCw0LfQsNCt0KLQnCA9INCQ0K3QoF/Qn9C+0LvRg9GH0LjRgtGM0J3QvtC80LXRgNCX0LDQutCw0LfQsNCt0KLQnCjQl9Cw0LrQsNC30JrQu9C40LXQvdGC0LApOwoJCglF0YHQu9C4INCd0LUg0JDQrdCgX9Ct0YLQvtCU0L7QutGD0LzQtdC90YLRjdCi0Jwo0KDQtdCw0LvQuNC30LDRhtC40Y8sINCd0L7QvNC10YDQl9Cw0LrQsNC30LDQrdCi0JwpINCi0L7Qs9C00LAKCQlQstC+0LfQstGA0LDRgjvQmtC+0L3QtdGG0J/RgNC+0YbQtdC00YPRgNGLCgoJ0JTQvtC/0L7Qu9C90LjRgtC10LvRjNC90YvQtdCU0LDQvdC90YvQtdCo0LDQv9C60LggPSDQndC+0LLRi9C5INCh0YLRgNGD0LrRgtGD0YDQsDsKCdCU0L7Qv9C+0LvQvdC40YLQtdC70YzQvdGL0LXQlNCw0L3QvdGL0LXQqNCw0L/QutC4LtCS0YHRgtCw0LLQuNGC0YwoItCY0LTRk9GA0YPQt9Cf0L7Qu9GD0YciLCAiNDY2MDAxMTUxNTA0NSIpOwoJ0K3Qu9C10LrRgtGA0L7QvdC90L7QtdCS0LfQsNC40LzQvtC00LXQudGB0YLQstC40LUu0JTQvtCx0LDQstC40YLRjNCU0L7Qv9C00LDQvdC90YvQtdCS0JTQtdGA0LXQstC+KAoJCtCU0LDQvdC90YvQtSwKCtCU0L7Qv9C+0LvQvdC40YLQtdC70YzQvdGL0LXQlNCw0L3QvdGL0LXQqNCw0L/QutC4LAoJCNCY0YHRgtC40L3QsCk7CgkKCdCV0YHQu9C4INCf0YPRgdGC0LDRj9Ch0YLRgNC+0LrQsChd0L7QvNC10YDQldCw0LrQsNC30LDQrdCi0JMpINCi0L7Qs9C00LAKCQlQstC+0LfQstGA0LDRgjvQmtC+0L3QtdGG0J/RgNC+0YbQtdC00YPRgNGLCgoJ0KLQsNCx0LvQuNGG0LDQotC+0LLQsNGA0L7QsiA9INCULtCw0L3QvdGL0LUu0KHRgtGA0L7QutC4LtCd0LDQudGC0LgoCgkJIuCi0LDQsdC70LjRhtCw0KHQu9C10YLRh9C10YLQsNCk0LDQutGC0YPRgNGLLtCh0LLQtdC00LXQvdC40Y/QntCx0J7RgtCz0YDRg9C20LXQvdC90YvRhdCf0L7Qt9C40YbQuNC50YUiLAoJCSIi0J/QvtC70L3Ri9C50J/Rg9GC0YwiLAoJCNCY0YHRgtC40L3QsCk7CgkKCdCV0YHQu9C4INCi0LDQsdC70LjRhtCw0KLQvtCy0LDRgNC+0LIgPSDQndC10L7Qv9GA0LXQtNC10LvQtdC90L4g0KLQvtCz0LTQsAoJCssB0L7Qt9Cy0YDQsNGCOwoJ0JrQvtC90LXRhtCV0YHQu9C4OwoJCglU0L7Qv9C+0LvQvdC40YLQtdC70YzQvdGL0LXQlNCw0L3QvdGL0LXRgdGC0YDQvtC60LggPSDQndC+0LLRi9C5INCh0YLRgNGD0LrRgtGD0YDQsDsKCdCU0L7Qv9C+0LvQvdC40YLQtdC70YzQvdGL0LXQlNCw0L3QvdGL0LXRgdGC0YDQvtC60Lgu0JLQvtGB0YLQsNCy0LjRgtGMINCi0JfQsNC60LDQt9Cd0L7QvNC10YAiLCDQndC+0LzQtdGA0JfQsNC60LDQt9Cw0K3QotCcKTsKCglU0LvRjyDQmtCw0LbQtNC+0LPQviDQodGC0YDQvtC60LDQotC+0LLQsNGA0LAg0JjQtyDQotCw0LHQu9C40YbQsNCi0L7QstCw0YDQvtCyLtCh0YLRgNC+0LrQuCDQptC40LrQuwoJCNCt0LvQtdC60YLRgNC+0L3QvdC+0LVQstC30LDQuNC80L7QtNC10LnRgdGC0LLQuNC1LtCU0L7QsdCw0LLQuNGC0YzQlNC+0L/QlNCw0L3QvdGL0LXQktCU0LXRgNC10LLQvigKCQnQodGC0YDQvtC60LDQotC+0LLQsNGA0LAsCgkJ0JTQvtC/0L7Qu9C90LjRgtC10LvRjNC90YvQtNCw0L3QvdGL0LXRgdGC0YDQvtC60LgsCgkJ0JjRgdGC0LjQvdCwKTsKCdCa0L7QvdC10YbQptC40LrQu9CwOwoJCtCt0LvQtdC60YLRgNC+0L3QvdC+0LVQktC30LDQuNC80L7QtNC10LnRgdGC0LLQuNC1LtCU0L7QsdCw0LLQuNGC0YzQlNC+0L/QlNCw0L3QvdGL0LXQktCU0LXRgNC10LLQvigKCQkJ0KHRgtGA0L7QutCw0KLQvtCy0LDRgNCwLAoJCQlQstC+0L/QvtC70L3QuNGC0LXQu9GM0L3Ri9C10JTQsNC90L3Ri9C10KHRgtGA0L7QutC4LAoJCQnQmNGB0YLQuNC90LApOwoJ0JrQvtC90LXRhtCm0LjQutC70LA7CgkK0JrQvtC90LXRhtCf0YDQvtGG0LXQtNGD0YDRiw0KDQrQpNGD0L3QutGG0LjRjyDQkNCt0KDf0J/QvtC70YPRh9C40YLRjNCg0LXQsNC70LjQt9Cw0YbQuNGOKNCe0YHQvdC+0LLQsNC90LjQtSkKCglF0YHQu9C4INCi0LjQv9CX0L3RhyjQntGB0L3QvtCy0LDQvdC40LUpID0g0KLQuNC/KCLQlNC+0LrRg9C80LXQvdGC0KHQu9GL0LvQutCwLtCg0LXQsNC70LjQt9Cw0YbQuNGP0KLQvtCy0LDRgNGL0KPRgdC70YPQs9C4Iikg0KLQvtCz0LTQsAoJ0JLQvtC30LLRgNCw0YIg0J7RgdC90L7QstCw0L3QuNC1OwoJ0JrQvtC90LXRhtCV0YHQu9C4OwoJCglF0YHQu9C4INCi0LjQv9CX0L3RhyjQntGB0L3QvtCy0LDQvdC40LUpID0g0KLQuNC/KCLQlNC+0LrRg9C80LXQvdGC0KHQu9GL0LvQutCwLtCh0YfQtdGC0KTQsNC60YLRg9GA0LDQktGL0LTQsNC90L3Ri9C5Iikg0KLQvtCz0LTQsAoJCTTQvtC60YPQvNC10L3RgtCe0YHQvdC+0LLQsNC90LjQtSA9INCQ0K3QoF/Ql9C90LDRh9C10L3QuNC10KDQtdC60LLQuNC30LjRgtCwKNCe0YHQvdC+0LLQsNC90LjQtSwgItCU0L7QutGD0LzQtdC90YLRCeGB0L3QvtCy0LDQvdC40LUiKTsKCQlF0YHQu9C4INCi0LjQv9CX0L3RhyjQlNC+0LrRg9C80LXQvdGC0J7RgdC90L7QstCw0L3QuNC1KSA9INCi0LjQvCgi0JTQvtC60YPQvNC10L3RgtCh0YHRi9C70LrQsC7QoNC10LDQu9C40LfQsNGG0LjRj9Ci0L7QstCw0YDRi9Cj0YHQu9GD0LPQuCIpINCi0L7Qs9C00LAKCQlQstC+0LfQstGA0LDRgiDQntGB0L3QvtCy0LDQvdC40LU7CgnQktC+0LfQstGA0LDRgiDQndC10L7Qv9GA0LXQtNC10LvQtdC90L47CgrQmtC+0L3QtdGG0KTQu9Cw0LDRi9C4CgrQpNGD0L3QutGG0LjRjyDQkNCt0KDf0J/QvtC70YPRh9C40YLRjNCX0LDQutCw0LfQmtC70LjQtdC90YLQsChQoNC10LDQu9C40LfQsNGG0LjRjykKCglf0LDQutCw0LfQmtC70LjQtdC90YIgPSDQkNCt0KDf0JfQvdCw0YfQtdC90LjQtdCg0LXQutCy0LjQt9C40YLQsChQoNC10LDQu9C40LfQsNGG0LjRjywgItCX0LDQutCw0LfQmtC70LjQtdC90YLQsCIpOwoJ0JXRgdC70Lgg0KLQuNC/0JfQvdGHKNCX0LDQutCw0LfQmtC70LjQtdC90YIpID0g0KLQuNC/KCLQlNC+0LrRg9C80LXQvdGC0KHQu9GL0LvQutCwLtCX0LDQutCw0LfQmtC70LjQtdC90YLQsCIpINCi0L7Qs9C00LAKCQlQstC+0LfQstGA0LDRgiDQl9Cw0LrQsNC30JrQu9C40LXQvdGCOwoJ0JrQvtC90LXRhtCV0YHQu9C4OwoJCglF0YHQu9C4INCi0LjQv9CX0L3RhyjQoNC10LDQu9C40LfQsNGG0LjRjykgPSDQotC40L8oItCU0L7QutGD0LzQtdC90YLRgdGB0YvQu9C60LAu0KHQu9C10LTRgdGC0LLQuNGP0L7QktC+0LfQstGA0LDRgtC10KLRg9GB0LvRg9Cz0LjQn9C+0YHRgtGD0L/Qu9C10L3QuNGP0LzQuCIpINCi0L7Qs9C00LAKCQlQstC+0LfQstGA0LDRgiDQlNC+0LrRg9C80LXQvdGC0L7RgdC90L7QstCw0L3QuNGPOwoJ0JrQvtC90LXRhtCV0YHQu9C4OwoJCglF0YHQu9C4INCi0LjQv9CX0L3RhyjQoNC10LDQu9C40LfQsNGG0LjRjykgPSDQotC40L8oItCU0L7QutGD0LzQtdC90YLRgdGB0YvQu9C60LAu0KHQvtC/0YDQvtCy0L7QtNC40YLQtdC70YzQvdGL0LnQodGH0LXRgtCk0LDQutGC0YPRgNGL0JLRi9C00LDQvdC90YvQuSIpINCi0L7Qs9C00LAKCQlQstC+0LfQstGA0LDRgiDQntGB0L3QvtCy0LDQvdC40LU7CgnQktC+0LfQstGA0LDRgiDQndC10L7Qv9GA0LXQtNC10LvQtdC90L47CgrQmtC+0L3QtdGG0KTQu9Cw0LDQudC70LAKCg==
+
+def run(*args: str) -> None:
+    print("+", " ".join(args), flush=True)
+    subprocess.run(args, check=True)
+
+
+def replace_strings(value, replacements: dict[str, str]):
+    if isinstance(value, dict):
+        return {k: replace_strings(v, replacements) for k, v in value.items()}
+    if isinstance(value, list):
+        return [replace_strings(v, replacements) for v in value]
+    if isinstance(value, str):
+        for old, new in replacements.items():
+            value = value.replace(old, new)
+        return value
+    return value
+
+
+def main() -> None:
+    for p in (SRC, QUERY_SRC, VERIFY):
+        if p.exists():
+            shutil.rmtree(p)
+    for p in (BASE_CFE, QUERY_CFE, OUT):
+        if p.exists():
+            p.unlink()
+
+    urllib.request.urlretrieve(BASE_URL, BASE_CFE)
+    urllib.request.urlretrieve(QUERY_URL, QUERY_CFE)
+
+    run("v8unpack", "-E", str(BASE_CFE), str(SRC), "--processes", "1")
+    run("v8unpack", "-E", str(QUERY_CFE), str(QUERY_SRC), "--processes", "1")
+
+    for child in list(SRC.iterdir()):
+        if child.name not in {"ConfigurationExtension.json", "version.bin", "Language"}:
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+
+    sample = QUERY_SRC / "CommonModule" / "ГенерацияИсполняемогоКодаПредставленийЗУПУтилиты"
+    target_module = SRC / "CommonModule" / MODULE_NAME
+    target_module.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(sample, target_module)
+
+    id_path = target_module / "CommonModule.id.json"
+    id_data = json.loads(id_path.read_text(encoding="utf-8"))
+    id_data["uuid"] = BASE_MODULE_UUID
+    id_path.write_text(json.dumps(id_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    module_path = target_module / "CommonModule.json"
+    module_data = json.loads(module_path.read_text(encoding="utf-8"))
+    old_module_name = module_data["name"]
+    old_module_synonym = module_data.get("name2", {}).get("ru", old_module_name)
+    module_data = replace_strings(module_data, {
+        old_module_name: MODULE_NAME,
+        old_module_synonym: "Обмен с контрагентами переопределяемый",
+    })
+    module_data["name"] = MODULE_NAME
+    module_data["name2"] = {"ru": "Обмен с контрагентами переопределяемый"}
+    module_data["comment"] = EXTENSION_COMMENT
+    module_data["header"][0][1][2:] = ["1", "1", "1", "0", "0", "0", "0", "0"]
+    module_path.write_text(json.dumps(module_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    bsl = BSL_PATH.read_text(encoding="utf-8")
+    (target_module / "CommonModule.obj.bsl").write_text("\ufeff" + bsl, encoding="utf-8")
+
+    root_path = SRC / "ConfigurationExtension.json"
+    root_data = json.loads(root_path.read_text(encoding="utf-8"))
+    old_name = root_data.get("name", "ИзменениеАлгоритмовЗагрузкиДанных")
+    old_synonym = root_data.get("name2", {}).get("ru", "Изменение алгоритмов загрузки данных")
+    old_uuid = root_data["file_uuid"]
+    root_data = replace_strings(root_data, {
+        old_name: EXTENSION_NAME,
+        old_synonym: EXTENSION_SYNONYM,
+        "ИАЗД_": EXTENSION_PREFIX,
+        old_uuid: NEW_FILE_UUID,
+    })
+    root_data["name"] = EXTENSION_NAME
+    root_data["name2"] = {"ru": EXTENSION_SYNONYM}
+    root_data["comment"] = EXTENSION_COMMENT
+    root_data["file_uuid"] = NEW_FILE_UUID
+    root_path.write_text(json.dumps(root_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    run("v8unpack", "-B", str(SRC), str(OUT), "--auto_include", "--processes", "1")
+    run("v8unpack", "-E", str(OUT), str(VERIFY), "--processes", "1")
+
+    module_dirs = sorted((VERIFY / "CommonModule").glob("*"))
+    assert len(module_dirs) == 1, module_dirs
+    assert module_dirs[0].name == MODULE_NAME, module_dirs[0]
+    assert not (VERIFY / "DataProcessor").exists()
+
+    verify_id = json.loads((module_dirs[0] / "CommonModule.id.json").read_text(encoding="utf-8"))
+    assert verify_id["uuid"] == BASE_MODULE_UUID, verify_id
+
+    verify_module = json.loads((module_dirs[0] / "CommonModule.json").read_text(encoding="utf-8"))
+    assert verify_module["name"] == MODULE_NAME, verify_module["name"]
+    assert verify_module["header"][0][1][2:] == ["1", "1", "1", "0", "0", "0", "0", "0"]
+
+    verify_bsl = (module_dirs[0] / "CommonModule.obj.bsl").read_text(encoding="utf-8-sig")
+    for required in (
+        '&После("ЗаполнитьДанныеУПД_5_02_ИнформацияПродавца")',
+        '&После("ЗаполнитьДанныеУПД_5_03_ИнформацияПродавца")',
+        '"ИдГрузПолуч", "4660011515045"',
+        '"ЗаказНомер", НомерЗаказаЭТМ',
+        '"5024136666"',
+    ):
+        assert required in verify_bsl, required
+
+    verify_root = json.loads((VERIFY / "ConfigurationExtension.json").read_text(encoding="utf-8"))
+    assert verify_root["name"] == EXTENSION_NAME, verify_root["name"]
+    assert verify_root["file_uuid"] == NEW_FILE_UUID, verify_root["file_uuid"]
+
+    digest = hashlib.sha256(OUT.read_bytes()).hexdigest()
+    (ROOT / "SHA256.txt").write_text(f"{digest}  {OUT.name}\n", encoding="utf-8")
+    print(f"BUILT={OUT}")
+    print(f"SIZE={OUT.stat().st_size}")
+    print(f"SHA256={digest}")
+
+
+if __name__ == "__main__":
+    main()
