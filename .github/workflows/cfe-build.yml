@@ -1,4 +1,4 @@
-name: CFE build
+name: Build 1C extension for ETM UПD
 
 on:
   push:
@@ -6,30 +6,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  extract-template:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+
       - name: Install v8unpack
         run: python -m pip install --disable-pip-version-check v8unpack==1.2.6
-      - name: Download template CFE
-        run: |
-          python - <<'PY'
-          import urllib.request
-          url = 'https://github.com/pulh1/QueryConsole1C/releases/download/beta/QueryConsoleZUP-0.5.0.1.cfe'
-          urllib.request.urlretrieve(url, 'template.cfe')
-          PY
-      - name: Extract template
-        run: |
-          mkdir -p extracted
-          v8unpack -E template.cfe extracted --processes 1
-          find extracted -type f -maxdepth 10 -print
-      - name: Upload extracted source
+
+      - name: Build and verify CFE
+        run: python .github/scripts/build_target_cfe.py
+
+      - name: Upload CFE
         uses: actions/upload-artifact@v4
         with:
-          name: extracted-common-module-cfe-source
-          path: extracted
-          include-hidden-files: true
+          name: АНЬДЭЛИ_ЭЛЕКТРИК_РУС_УПД_ЭТМ
+          path: |
+            АНЬДЭЛИ_ЭЛЕКТРИК_РУС_УПД_ЭТМ.cfe
+            SHA256.txt
+          if-no-files-found: error
