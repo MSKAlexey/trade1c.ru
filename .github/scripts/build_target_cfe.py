@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import pathlib
@@ -15,10 +16,7 @@ QUERY_SRC = ROOT / "query_source"
 VERIFY = ROOT / "verify"
 OUT = ROOT / "АНЬДЭЛИ_ЭЛЕКТРИК_РУС_УПД_ЭТМ.cfe"
 
-BASE_URL = (
-    "https://raw.githubusercontent.com/emakei/cfe/main/"
-    "%D0%98%D0%B7%D0%BC%D0%B5%D0%BD%D0%B8%D0%B5%D0%90%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC%D0%BE%D0%B2%D0%97%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B8%D0%94%D0%B0%D0%BD%D0%BD%D1%8B%D1%85.cfe"
-)
+BASE_BLOB_URL = "https://api.github.com/repos/emakei/cfe/git/blobs/a26ed4eddc722f7bd7d70028afb7b4cba19d7e8a"
 QUERY_URL = (
     "https://github.com/pulh1/QueryConsole1C/releases/download/beta/"
     "QueryConsoleZUP-0.5.0.1.cfe"
@@ -42,6 +40,16 @@ def run(*args: str) -> None:
     subprocess.run(args, check=True)
 
 
+def download_github_blob(url: str, target: pathlib.Path) -> None:
+    request = urllib.request.Request(
+        url,
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "cfe-builder"},
+    )
+    with urllib.request.urlopen(request) as response:
+        payload = json.load(response)
+    target.write_bytes(base64.b64decode(payload["content"]))
+
+
 def replace_strings(value, replacements: dict[str, str]):
     if isinstance(value, dict):
         return {k: replace_strings(v, replacements) for k, v in value.items()}
@@ -62,7 +70,7 @@ def main() -> None:
         if p.exists():
             p.unlink()
 
-    urllib.request.urlretrieve(BASE_URL, BASE_CFE)
+    download_github_blob(BASE_BLOB_URL, BASE_CFE)
     urllib.request.urlretrieve(QUERY_URL, QUERY_CFE)
 
     run("v8unpack", "-E", str(BASE_CFE), str(SRC), "--processes", "1")
