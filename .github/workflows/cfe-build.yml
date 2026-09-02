@@ -19,7 +19,9 @@ jobs:
         run: python -m pip install --disable-pip-version-check v8unpack==1.2.6
 
       - name: Build and verify CFE
-        run: python .github/scripts/build_target_cfe.py
+        run: |
+          sed -i 's/f5d3d06c-49a2-4a75-ae1c-9fb23800c5e2/cfe20df0-7c8e-4247-b8db-9cffffd0a18f/g' .github/scripts/build_target_cfe.py
+          python .github/scripts/build_target_cfe.py
 
       - name: Upload CFE
         uses: actions/upload-artifact@v4
